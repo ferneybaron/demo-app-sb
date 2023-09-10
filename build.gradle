@@ -1,0 +1,91 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version "${springBootVersion}"
+	id 'io.spring.dependency-management' version "${dependencyManagementVersion}"
+	id 'org.sonarqube' version "${sonarqubeVersion}"
+	id 'jacoco'
+}
+
+group = "${groupPackage}"
+version = "${appVersion}"
+
+java {
+	sourceCompatibility = "${sourceCompatibilityProp}"
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+jar {
+	enabled = false
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	//Docs
+	implementation "org.springframework.boot:spring-boot-starter-validation:${validationVersion}"
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${openapiUIVersion}"
+
+	//Tools
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+	annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+
+	//Test
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+sonar {
+	properties {
+		property "sonar.exclusions", "**/model/**, **/dto/**, **/entity/**, **/mapper/**, **/Application.class"
+		property "sonar.jacoco.reportPaths", "build/${jacocoReportsDirectory}/test.exec" // allow to automatically run and read reports for coverage
+		property "sonar.coverage.jacoco.xmlReportPaths", "build/${jacocoReportsDirectory}/test/jacocoTestReport.xml"
+	}
+}
+
+jacoco {
+	toolVersion = "${jacocoToolVersion}"
+	reportsDirectory = layout.buildDirectory.dir("${jacocoReportsDirectory}")
+}
+
+jacocoTestReport {
+	reports {
+		xml.required = true
+		csv.required = true
+		html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+	}
+	afterEvaluate {
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, exclude: [
+					'**/config/**',
+					'**/constants/**',
+					'**/validation/**',
+					'**/payload/**',
+					'**/model/**',
+					'**/dto/**',
+					'**/entity/**',
+					'**/mapper/**',
+					'**/Application.class'
+			])
+		}))
+	}
+}
+
+test.finalizedBy jacocoTestReport
