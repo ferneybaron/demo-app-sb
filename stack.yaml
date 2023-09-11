@@ -1,14 +1,14 @@
 version: "3.9"
 services:
   app:
-    image: demo-app-sb
+    image: localhost:5000/demo-app-sb
     networks:
       - backend-nw
     ports:
       - "8006:8080"
     deploy:
       mode: replicated
-      replicas: 1
+      replicas: 3
       restart_policy:
         condition: on-failure
         max_attempts: 3
