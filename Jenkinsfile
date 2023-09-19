@@ -68,6 +68,12 @@ pipeline {
     }
 
     post {
+        success {
+            slackSend color: '#36a64f', message: "Deployment of ${repoName} to ${branchEnv} succeeded!"
+        }
+        failure {
+            slackSend color: '#ff0000', message: "Deployment of ${repoName} to ${branchEnv} failed!"
+        }
         always {
             cleanWs()
         }
